@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Hello World</title>
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+
+    <!-- Don't use this in production: -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="text/babel">
+    
+      // function MyApp() {
+      //   return <h1>Hello, world!</h1>;
+      // }
+
+
+const useState = React.useState;
+
+
+function ProductCategoryRow({category}) {
+    return (
+        <tr>
+            <th colSpan="2">
+                {category}
+            </th>
+        </tr>
+    );
+}
+
+function ProductRow({product}) {
+    const name = product.stocked ? product.name : 
+        <span style={{color: 'red'}}>
+            {product.name}
+        </span>;
+    
+    return (
+        <tr>
+            <td>{name}</td>
+            <td>{product.price}</td>
+        </tr>
+    );
+}
+
+
+function ProductTable({products, filterText, inStockOnly}) {
+    const rows = [];
+    let lastCategory = null;
+    products.forEach((product) => {
+        if (product.name.toLowerCase().indexOf(filterText.toLowerCase()) === -1) {
+            return;
+        }
+        if (inStockOnly && !product.stocked) {
+            return;
+        }
+        if (product.category !== lastCategory) {
+            rows.push(
+                <ProductCategoryRow category={product.category} key={product.category} />
+            );
+        }
+        rows.push(
+            <ProductRow product={product} key={product.name} />
+        );
+        lastCategory = product.category;
+    });
+
+    return (
+        <table>
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Price</th>
+                </tr>
+            </thead>
+            <tbody>{rows}</tbody>
+        </table>
+    )
+}
+
+function SearchBar({filterText, inStockOnly, onFilterTextChange, onInStockOnlyChange}) {
+    return (
+        <form>
+            <input type="text" value={filterText} placeholder="Search..." onChange={(e) => onFilterTextChange(e.target.value)} />
+            <br/>
+            <label>
+                <input type="checkbox" checked={inStockOnly} onChange={(e) => onInStockOnlyChange(e.target.checked)} />
+                {' '}
+                Only show products in stock
+            </label>
+        </form>
+    );
+}
+
+function FilterableProductTable({products}) {
+    const [filterText, setFilterText] = useState('');
+    const [inStockOnly, setInStockOnly] = useState(false);
+    return (
+        <>
+            <SearchBar filterText={filterText} inStockOnly={inStockOnly} onFilterTextChange={setFilterText} onInStockOnlyChange={setInStockOnly} />
+            <ProductTable products={products} filterText={filterText} inStockOnly={inStockOnly} />
+        </>
+    );
+}
+
+const PRODUCTS = [
+    {category: "Fruits", price: "$1", stocked: true, name: "Apple"},
+    {category: "Fruits", price: "$1", stocked: true, name: "Dragonfruit"},
+    {category: "Fruits", price: "$2", stocked: false, name: "Passionfruit"},
+    {category: "Vegetables", price: "$2", stocked: true, name: "Spinach"},
+    {category: "Vegetables", price: "$4", stocked: false, name: "Pumpkin"},
+    {category: "Vegetables", price: "$1", stocked: true, name: "Peas"}
+];
+
+//export default 
+function MyApp3() {
+    // ok
+    // return <FilterableProductTable products={PRODUCTS} />;
+
+    const [cnt, setCnt] = useState(2);
+
+    // setCnt(cnt + 1);
+    // setCnt(cnt + 1);
+    // setCnt(cnt + 1);  // 直接调用会触发 无限渲染11111
+    // setCnt(1);
+    // setCnt(cnt => cnt + 1);
+
+    function incr() {
+        setCnt(s => s + 1);
+    }
+
+    return (
+        <>
+            <h1>22</h1>
+            <br />
+            {cnt}
+            
+
+            <button onClick={() => {
+                setCnt(cnt + 1)
+                // alert(cnt);    // 渲染的时候 cnt 就已经确定了，所以 始终都是 点击之前的值。  所以 alert的值 在单次点击中 不会发生变化。
+                setCnt(cnt + 1)
+                // alert(cnt);
+                incr();       // ok  可以多次调用。 
+// setState 实际上只是缓存了 操作
+// 所以 你 setCnt(2) 调用n次 和 调用1次的 效果是一样的，因为 操作是 将cnt设置为2， 你执行n次，cnt还是2.
+// 只有lambda，它的操作是 在现有值的基础上+1，所以 调用一次就是一次+1，调用n次，就是n次+1。 而且 可以看到 上面的 incr中的 lambda 的参数 是s，不是cnt，所以 lambda是 由 react 调用的，并且调用时 把 cnt 的 ref 传了进来。 s只是形参，不是 绑定到s。
+                //incr();
+                // alert(cnt);
+                setCnt(cnt => cnt + 1);   // 不行，整体还是 +1...ok的，因为下面还有个 setCnt，所以导致 无论这里 +多少，都被下面的 cnt+1 覆盖了。。
+                // alert(cnt);
+                // setCnt(cnt + 1)    // 每次点击只+1。 每次点击都会触发渲染，然后渲染的值是 +1的，不是+3的， 所以这3次 setCnt 中 实参 都是相同的，即 cnt 都是相同的值。
+                // alert(cnt);
+            }}> cnt: {cnt} </button>
+        </>
+    );
+
+
+}
+
+
+
+// function Test3({ aaa }) {
+//   return (
+//     <h3>test333 {aaa}</h3>
+//   );
+// }
+
+// const sth = {name: "www"}
+
+// const useState = React.useState;
+
+// //export default 
+// function MyApp3() {
+//     // return <FilterableProductTable products={PRODUCTS} />;
+//     const [cnt, setCnt] = React.useState(0);
+//     const [cnt2, setCnt2] = useState(0);
+//     return (
+//       <>
+//       <h1>111</h1>
+//       <Test3 aaa={sth.name} />
+//       <h2>{sth.name}</h2>
+//       </>
+//     );
+// }
+
+      const container = document.getElementById('root');
+      const root = ReactDOM.createRoot(container);
+      root.render(<MyApp3 />);
+
+    </script>
+    <!--
+      Note: this page is a great way to try React but it's not suitable for production.
+      It slowly compiles JSX with Babel in the browser and uses a large development build of React.
+
+      Read this page for starting a new React project with JSX:
+      https://react.dev/learn/start-a-new-react-project
+
+      Read this page for adding React with JSX to an existing project:
+      https://react.dev/learn/add-react-to-an-existing-project
+    -->
+  </body>
+</html>
